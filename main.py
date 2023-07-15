@@ -56,9 +56,9 @@ async def on_user_session_get_user(sid: str) -> str:
 
 
 @auth_service.event("auth.verify")
-async def on_user_verify(data: dict) -> dict:
+async def on_user_verify(token: str) -> dict:
     try:
-        payload = verify_verification_token(data["token"])
+        payload = verify_verification_token(token)
         user = await User.get(id=payload["sub"])
         user.verified = True
         await user.save()
