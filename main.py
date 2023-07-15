@@ -24,8 +24,7 @@ async def on_user_password_create(data: dict):
         id=data["id"],
     )
     await user.save()
-    vid = create_verification_token(user.id)
-    return {"id": str(user.id), "vid": str(vid)}
+    return create_verification_token(user.id)
 
 
 @auth_service.event("auth.password.change")
@@ -34,7 +33,7 @@ async def on_user_password_change(data: dict):
 
 
 @auth_service.event("auth.login")
-async def on_user_login(data: dict) -> dict:
+async def on_user_login(data: dict) -> str:
     # TODO: implement ip check
     password: bytes = data["password"].encode("utf-8")
     user = await User.get(id=data["id"])
@@ -42,7 +41,7 @@ async def on_user_login(data: dict) -> dict:
     session = await Session.create(user=user.id, ip=str(data["ip"]))
     await (await session_redis.init()).new(session.id, user.id, 172800)
     #
-    return {"id": str(session.id)}
+    return str(session.id)
 
 
 @auth_service.event("auth.session.exists")
