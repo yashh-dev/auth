@@ -1,9 +1,9 @@
 from redis.asyncio import BlockingConnectionPool, Redis
 import uuid
-from jwt import JWT, jwk_from_pem
-from jwt.utils import get_int_from_datetime
+import jwt
 import uuid
 import datetime
+import os
 
 class Rediser:
     def __init__(self, url: str, db: int = 0) -> None:
@@ -48,27 +48,22 @@ class SessionRediser(Rediser):
         await self.radis.set(str(sid), str(uid), ex=172800)
 
 
-
-instance = JWT()
-
-
 def create_verification_token(user_id: uuid.UUID) -> str:
     """creates verification token from userid"""
     payload = {
         "iss": "miauw.social/auth",
         "sub": str(user_id),
-        "iat": get_int_from_datetime(datetime.datetime.now()),
-        "exp": get_int_from_datetime(
-            datetime.datetime.now() + datetime.timedelta(minutes=15)
-        ),
+        "iat": int(datetime.datetime.now().timestamp()),
+        "exp": int(datetime.datetime.now().timestamp()) + 86400,
     }
-    with open("certs/private.pem", "rb") as pk:
-        signing_key: str = jwk_from_pem(pk.read())
-    return instance.encode(payload, signing_key, alg="RS256")
+    return jwt.encode(payload, os.getenv("JWT_SECRET"),algorithm="HS256")
 
 
 def verify_verification_token(token: str) -> dict[str, str]:
     """verifies token"""
-    with open("certs/public.pem", "rb") as pk:
-        verifying_key = jwk_from_pem(pk.read())
-    return instance.decode(token, verify_verification_token)
+    return jwt.decode(
+        token,
+        os.getenv("JWT_SECRET"),
+        algorithms=["HS256"],
+        verify=True,
+    )

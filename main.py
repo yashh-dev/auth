@@ -1,15 +1,26 @@
-from base_service import Service
+from base_service import BaseService
 from tortoise import Tortoise, run_async
 from models import User, Session
-from utils import SessionRediser, Rediser, verify_verification_token, create_verification_token
+from utils import (
+    SessionRediser,
+    Rediser,
+    verify_verification_token,
+    create_verification_token,
+)
 from argon2 import hash_password, verify_password
 import uuid
+import json
+import jwt
+import traceback
 
+
+auth_service = BaseService("auth", "amqp://guest:guest@192.168.1.28")
+
+
+@auth_service.event("auth.password.initial")
 async def on_user_password_create(data: dict):
     user = await User(
-        password_hash= hash_password(
-            data["password"].encode("utf-8")
-        ).decode(),
+        password_hash=hash_password(data["password"].encode("utf-8")).decode(),
         id=data["id"],
     )
     await user.save()
@@ -17,9 +28,12 @@ async def on_user_password_create(data: dict):
     return {"id": str(user.id), "vid": str(vid)}
 
 
-async def on_user_password_update(data: dict):
+@auth_service.event("auth.password.change")
+async def on_user_password_change(data: dict):
     return {"abc": 1}
 
+
+@auth_service.event("auth.login")
 async def on_user_login(data: dict) -> dict:
     # TODO: implement ip check
     password: bytes = data["password"].encode("utf-8")
@@ -30,12 +44,30 @@ async def on_user_login(data: dict) -> dict:
     #
     return {"id": str(session.id)}
 
-async def on_user_session_exists(data: dict) -> bool:
-    return await (await session_redis.init()).exists(data["sid"])
+
+@auth_service.event("auth.session.exists")
+async def on_user_session_exists(sid: str) -> bool:
+    return await (await session_redis.init()).exists(sid)
 
 
-async def on_user_session_get_user(data: dict) -> str:
-    return {await (await session_redis.init()).get(data["sid"])}
+@auth_service.event("auth.session.get-user")
+async def on_user_session_get_user(sid: str) -> str:
+    return await (await session_redis.init()).get(sid)
+
+
+@auth_service.event("auth.verify")
+async def on_user_verify(data: dict) -> dict:
+    try:
+        payload = verify_verification_token(data["token"])
+        user = await User.get(id=payload["sub"])
+        user.verified = True
+        await user.save()
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return {"ok": 0}
+    return {"ok": 1}
+
 
 async def init():
     auth_service.logger.debug("connecting to database")
@@ -50,11 +82,5 @@ async def init():
 if __name__ == "__main__":
     session_redis = SessionRediser("redis://192.168.1.28")
     verfication_redis = Rediser("redis://192.168.1.28", 1)
-    auth_service = Service("auth", "amqp://guest:guest@192.168.1.28")
-    auth_service.add_event_handler("auth.password.initial", on_user_password_create)
-    auth_service.add_event_handler("auth.password.change", on_user_password_update)
-    auth_service.add_event_handler("auth.login", on_user_login)
-    auth_service.add_event_handler("auth.session.exists", on_user_session_exists)
-    auth_service.add_event_handler("auth.session.get-user", on_user_session_get_user)
     run_async(init())
     auth_service.start()
