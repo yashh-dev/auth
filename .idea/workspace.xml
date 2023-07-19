@@ -5,20 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="897b0d11-a0f9-46cb-94ff-c170fb474232" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/models/Account.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Crypto.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Crypto.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/DTO.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DTO.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/RabbitService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/RabbitService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/models/Session.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/models/User.kt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +158,7 @@
       <workItem from="1689750377815" duration="88000" />
       <workItem from="1689750486491" duration="1134000" />
       <workItem from="1689751674271" duration="11343000" />
-      <workItem from="1689763654644" duration="3334000" />
+      <workItem from="1689763654644" duration="3408000" />
     </task>
     <servers />
   </component>

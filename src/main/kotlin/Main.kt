@@ -85,7 +85,6 @@ class Service(private val name: String, connectUri: String) {
                     .mapToMap()
                     .one()
             }
-            println("x: $x")
             response = x["id"].toString()
         }
 
@@ -97,6 +96,6 @@ class Service(private val name: String, connectUri: String) {
 fun main(args: Array<String>) {
     val service = Service("auth", "jdbc:postgres://miauw_user:miauw_password@192.168.1.28/miauw")
     service.add("password.initial", service::handleUserCreate)
-    service.add("test2", service::handleUserLogin)
+    service.add("login", service::handleUserLogin)
     service.start()
 }
