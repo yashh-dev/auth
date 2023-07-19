@@ -1,18 +1,18 @@
 import com.google.gson.Gson
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Delivery;
-import models.User
-import org.ktorm.database.Database
 import org.postgresql.ds.PGPoolingDataSource
 import javax.sql.DataSource
+import org.jdbi.v3.core.Jdbi
+import org.json.JSONObject
+import kotlin.jvm.optionals.getOrNull
 
 class Service(private val name: String, connectUri: String) {
     private val rabbitService: RabbitService = RabbitService()
-    private val map: HashMap<String, (String, Delivery) -> Unit> = HashMap()
-    val database: Database = Database.connect(setupDataSource(connectUri))
+    private val map: HashMap<String, (Delivery) -> Unit> = HashMap()
+    private val database: Jdbi = Jdbi.create(setupDataSource(connectUri))
 
-
-    fun add(event: String, func: (String, Delivery) -> Unit) {
+    fun add(event: String, func: (Delivery) -> Unit) {
         map[event] = func
     }
 
@@ -23,7 +23,7 @@ class Service(private val name: String, connectUri: String) {
         source.serverNames = arrayOf("192.168.1.28")
         source.databaseName = "miauw"
         source.user = "miauw_user"
-        source.password ="miauw_password"
+        source.password = "miauw_password"
         return source
     }
 
@@ -33,31 +33,70 @@ class Service(private val name: String, connectUri: String) {
             rabbitService.start("${name}.${event}", handler)
         }
     }
-}
 
+    fun handleUserCreate(delivery: Delivery) {
+        val data = Gson().fromJson(String(delivery.body), UserCreateDTO::class.java)
+        val passwordHash: String = Crypto.hash(data.password as String)
+        database.inTransaction<Any, Exception> { handler ->
+            handler.execute("insert into accounts(\"id\", \"password_hash\") values('${data.id}','$passwordHash');")
+        }
+        val verificationToken = JWToken.createVerificationToken(data.id as String)
+        rabbitService.sendVerificationEMail(data.id as String, verificationToken)
+    }
 
-fun handleUserCreate(consumerTag: String, delivery: Delivery): String {
-    val data = Gson().fromJson(String(delivery.body), UserCreateDTO::class.java)
-    val passwordHash: String = Crypto.hash(data.password as String)
+    fun handleUserLogin(delivery: Delivery): String {
+        val data: UserLoginDTO = Gson().fromJson(String(delivery.body), UserLoginDTO::class.java)
+        var response = ""
+        val account: Map<String, Any?>? = database.withHandle<Map<String, Any?>, Exception> {
+            it.createQuery("select * from accounts where id::text = '${data.id}'").mapToMap().findOne().getOrNull()
+        }
+        if (account == null) {
+            response = JSONObject(
+                mapOf<String, Any>(
+                    "type" to "https://auth.miauw.social/login/account-not-found",
+                    "title" to "The account is not found!",
+                    "detail" to "Your account link with the profile is not found. This should not happen. Please reach out to admin.",
+                    "status" to 404
+                )
+            ).toString()
+        } else if (account["verified"] != true) {
+            response = JSONObject(
+                mapOf<String, Any>(
+                    "type" to "https://auth.miauw.social/login/account-not-verified",
+                    "title" to "The account is not verified!",
+                    "detail" to "Your account is is not verified, therefore login failed.",
+                    "status" to 403
+                )
+            ).toString()
+        }
+        if (!Crypto.verify(data.password as String, account?.get("password_hash") as String)) {
+            response = JSONObject(
+                mapOf<String, Any>(
+                    "type" to "https://auth.miauw.social/login/wrong-password",
+                    "title" to "The password is wrong!",
+                    "detail" to "Your provided password does not match the password hash in the database.",
+                    "status" to 403
+                )
+            ).toString()
+        } else {
+            val userId: String = account["id"].toString()
+            val x = database.inTransaction<Map<String, Any?>, Exception> {
+                it.createQuery("insert into sessions(\"account\") values('${userId}') returning id;")
+                    .mapToMap()
+                    .one()
+            }
+            println("x: $x")
+            response = x["id"].toString()
+        }
 
-    return JWToken.createVerificationToken(data.id as String)
-}
-
-fun handleUserLogin(consumerTag: String, delivery: Delivery) {
-    val user: UserLoginDTO = Gson().fromJson(String(delivery.body), UserLoginDTO::class.java)
-    val replyProps: AMQP.BasicProperties =
-        AMQP.BasicProperties.Builder().correlationId(delivery.properties.correlationId).build()
-    try {
-
-    } catch (e: RuntimeException) {
-        println(e)
-    } finally {
+        return response;
     }
 }
 
+
 fun main(args: Array<String>) {
     val service = Service("auth", "jdbc:postgres://miauw_user:miauw_password@192.168.1.28/miauw")
-    service.add("test1", ::handleUserCreate)
-    service.add("test2", ::handleUserLogin)
+    service.add("password.initial", service::handleUserCreate)
+    service.add("test2", service::handleUserLogin)
     service.start()
 }

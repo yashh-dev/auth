@@ -10,7 +10,7 @@ class Crypto {
 
 
         fun verify(password: String, hash: String): Boolean {
-            return BCrypt.verifyer().verifyStrict(password.toCharArray(), hash.toCharArray()).verified
+            return BCrypt.verifyer(BCrypt.Version.VERSION_2A).verifyStrict(password.toCharArray(), hash.toCharArray()).verified
         }
     }
 
