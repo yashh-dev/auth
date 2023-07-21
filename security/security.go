@@ -21,12 +21,13 @@ func VerifyPassword(hash string, password string) (bool, error) {
 }
 
 func GenerateJWT(uid string) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(10 * time.Minute).Unix()
-	claims["iat"] = time.Now().Unix()
-	claims["nbf"] = time.Now().Add(time.Second).Unix()
-	claims["sub"] = uid
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss": "auth.miauw.social",
+		"sub": uid,
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Add(time.Millisecond).Unix(),
+		"exp": time.Now().Add(10 * time.Minute).Unix(),
+	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		return "", err
@@ -35,8 +36,8 @@ func GenerateJWT(uid string) (string, error) {
 
 }
 
-func VerifyJWT(token string) (bool, error) {
-	var t, err = jwt.Parse(
+func VerifyJWT(token string) (jwt.MapClaims, error) {
+	t, err := jwt.Parse(
 		token,
 		func(to *jwt.Token) (interface{}, error) {
 			if _, ok := to.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -48,9 +49,9 @@ func VerifyJWT(token string) (bool, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	if t.Valid {
-		return true, nil
-	} else {
-		return false, err
+	if !t.Valid {
+		return jwt.MapClaims{}, err
 	}
+
+	return t.Claims.(jwt.MapClaims), nil
 }
