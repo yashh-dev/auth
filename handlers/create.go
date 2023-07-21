@@ -32,8 +32,9 @@ func UserCreate(rawData []byte) (Response, error) {
 	db := database.Conn()
 	account := models.Account{PasswordHash: passwordHash, Base: models.Base{ID: uuid.FromStringOrNil(userCreateData.ID)}}
 	db.Create(&account)
+	vid, _ := security.GenerateJWT(account.ID.String())
 	return Response{
-		Content: nil,
+		Content: vid,
 		Status: ResponseStatus{
 			Code: 201,
 		},
