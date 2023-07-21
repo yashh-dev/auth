@@ -1,0 +1,12 @@
+package main
+
+import (
+	"miauw.social/auth/handlers"
+)
+
+func main() {
+	var forever chan struct{}
+	go Serve("auth.initial", handlers.UserCreate)
+	go Serve("auth.login", handlers.UserLogin)
+	<-forever
+}
