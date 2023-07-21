@@ -27,7 +27,7 @@ func GenerateJWT(uid string) (string, error) {
 	claims["iat"] = time.Now().Unix()
 	claims["nbf"] = time.Now().Add(time.Second).Unix()
 	claims["sub"] = uid
-	tokenString, err := token.SignedString([]byte("mysecret"))
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		return "", err
 	}
@@ -38,13 +38,16 @@ func GenerateJWT(uid string) (string, error) {
 func VerifyJWT(token string) (bool, error) {
 	var t, err = jwt.Parse(
 		token,
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		func(to *jwt.Token) (interface{}, error) {
+			if _, ok := to.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("abc")
 			}
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		},
 	)
+	if err != nil {
+		fmt.Println(err)
+	}
 	if t.Valid {
 		return true, nil
 	} else {
