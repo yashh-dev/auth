@@ -8,10 +8,12 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"gorm.io/gorm"
+	"miauw.social/auth/database"
 	"miauw.social/auth/handlers"
 )
 
-func Serve(queueName string, handler func([]byte) (handlers.Response, error)) {
+func Serve(queueName string, handler func(*gorm.DB, []byte) (handlers.Response, error)) {
 	conn, err := amqp.Dial("amqp://guest:guest@192.168.1.28:5672")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -44,7 +46,7 @@ func Serve(queueName string, handler func([]byte) (handlers.Response, error)) {
 		defer cancel()
 		for d := range messages {
 			start := time.Now()
-			r, err := handler(d.Body)
+			r, err := handler(database.Conn(), d.Body)
 			took := time.Since(start).Milliseconds()
 			if err != nil {
 				return

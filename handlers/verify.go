@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"miauw.social/auth/database"
+	"gorm.io/gorm"
 	"miauw.social/auth/database/models"
 	"miauw.social/auth/security"
 )
@@ -13,7 +13,7 @@ type UserVerifyData struct {
 	Token string
 }
 
-func UserVerify(rawData []byte) (Response, error) {
+func UserVerify(db *gorm.DB, rawData []byte) (Response, error) {
 	var userVerifyData UserVerifyData
 	err := json.Unmarshal(rawData, &userVerifyData)
 	if err != nil {
@@ -39,7 +39,6 @@ func UserVerify(rawData []byte) (Response, error) {
 			},
 		}, err
 	}
-	db := database.Conn()
 	var account models.Account
 	db.Where("id::text = ?", claims["sub"]).Find(&account)
 	return Response{

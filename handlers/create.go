@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gofrs/uuid"
-	"miauw.social/auth/database"
+	"gorm.io/gorm"
 	"miauw.social/auth/database/models"
 	"miauw.social/auth/security"
 )
@@ -14,7 +14,7 @@ type UserCreateData struct {
 	Password string
 }
 
-func UserCreate(rawData []byte) (Response, error) {
+func UserCreate(db *gorm.DB, rawData []byte) (Response, error) {
 	var userCreateData UserCreateData
 	err := json.Unmarshal(rawData, &userCreateData)
 	if err != nil {
@@ -29,7 +29,6 @@ func UserCreate(rawData []byte) (Response, error) {
 		}, err
 	}
 	passwordHash, err := security.EncryptPassword(userCreateData.Password)
-	db := database.Conn()
 	account := models.Account{PasswordHash: passwordHash, Base: models.Base{ID: uuid.FromStringOrNil(userCreateData.ID)}}
 	db.Create(&account)
 	vid, _ := security.GenerateJWT(account.ID.String())

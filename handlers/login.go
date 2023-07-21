@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 
-	"miauw.social/auth/database"
+	"gorm.io/gorm"
 	"miauw.social/auth/database/models"
 	"miauw.social/auth/security"
 )
@@ -17,7 +17,7 @@ type UserLoginData struct {
 	Password string
 }
 
-func UserLogin(rawData []byte) (Response, error) {
+func UserLogin(db *gorm.DB, rawData []byte) (Response, error) {
 	var userLoginData UserLoginData
 	err := json.Unmarshal(rawData, &userLoginData)
 	if err != nil {
@@ -32,7 +32,6 @@ func UserLogin(rawData []byte) (Response, error) {
 		}, err
 	}
 	var account models.Account
-	db := database.Conn()
 	db.Where("id = ?", userLoginData.ID).First(&account)
 	if !account.Verified {
 		return Response{
