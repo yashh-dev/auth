@@ -7,5 +7,6 @@ func main() {
 	go Serve("auth.initial", handlers.UserCreate)
 	go Serve("auth.login", handlers.UserLogin)
 	go Serve("auth.verify", handlers.UserVerify)
+	go Serve("auth.sessions.get", handlers.GetUserSession)
 	<-forever
 }
