@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -55,6 +56,8 @@ func Serve(queueName string, handler func(*gorm.DB, []byte) (handlers.Response, 
 				jsonResponse, _ := json.Marshal(r)
 				headers := make(map[string]interface{})
 				headers["X-Process-Time"] = took
+				hostname, _ := os.Hostname()
+				headers["X-Worker"] = hostname
 				err := ch.PublishWithContext(ctx,
 					"",
 					d.ReplyTo,
