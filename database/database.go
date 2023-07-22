@@ -1,7 +1,9 @@
 package database
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -10,7 +12,12 @@ import (
 )
 
 func Conn() *gorm.DB {
-	dsn := "host=192.168.1.28 user=miauw password=password dbname=miauw port=5432 sslmode=disable TimeZone=Europe/Berlin"
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s  sslmode=disable TimeZone=Europe/Berlin",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASS"),
+		os.Getenv("DB_NAME"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Panic(" [!] Failed to connect to database.")
@@ -28,8 +35,8 @@ func Conn() *gorm.DB {
 
 func RedisConn() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "192.168.1.28:6379",
-		Password: "",
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
 	})
 	return rdb

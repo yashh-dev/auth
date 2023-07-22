@@ -11,12 +11,12 @@ import (
 
 func EncryptPassword(password string) (string, error) {
 	argon := argon2.MemoryConstrainedDefaults()
-	encoded, err := argon.HashEncoded([]byte(password))
+	encoded, err := argon.HashEncoded([]byte(password + os.Getenv("PEPPER")))
 	return string(encoded), err
 }
 
 func VerifyPassword(hash string, password string) (bool, error) {
-	ok, err := argon2.VerifyEncoded([]byte(password), []byte(hash))
+	ok, err := argon2.VerifyEncoded([]byte(password+os.Getenv("PEPPER")), []byte(hash))
 	return ok, err
 }
 
