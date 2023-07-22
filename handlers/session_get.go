@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"time"
 
 	"gorm.io/gorm"
+	"miauw.social/auth/database/models"
 )
 
 type GetUserSessionData struct {
-	UserID string
+	ID string
 }
 
 func GetUserSession(db *gorm.DB, rawData []byte) (Response, error) {
@@ -25,12 +26,11 @@ func GetUserSession(db *gorm.DB, rawData []byte) (Response, error) {
 			},
 		}, err
 	}
-	// var sessions []models.Session
-	results := make(map[string]interface{})
-	db.Where("user  = ?", sessionData.UserID).Take(&results)
-	fmt.Println(results)
+	deltaTtl := time.Now().Add(-12 * time.Hour)
+	var sessions []models.Session
+	db.Where(`"user"::text  = ?`, sessionData.ID).Where("created_at >= ?", deltaTtl).Take(&sessions)
 	return Response{
-		Content: &results,
+		Content: &sessions,
 		Status: ResponseStatus{
 			Code: 200,
 		},

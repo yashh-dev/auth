@@ -1,6 +1,8 @@
 package main
 
-import "miauw.social/auth/handlers"
+import (
+	"miauw.social/auth/handlers"
+)
 
 func main() {
 	var forever chan struct{}
