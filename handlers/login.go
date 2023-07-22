@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"time"
 
 	"gorm.io/gorm"
+	"miauw.social/auth/database"
 	"miauw.social/auth/database/models"
 	"miauw.social/auth/security"
 )
@@ -58,6 +61,8 @@ func UserLogin(db *gorm.DB, rawData []byte) (Response, error) {
 	}
 	session := models.Session{UserID: account.ID}
 	db.Create(&session)
+	rdb := database.RedisConn()
+	rdb.SetEx(context.Background(), session.ID.String(), session.UserID.String(), time.Hour*12)
 	return Response{
 		Content: UserSessionResponse{SID: session.ID.String()},
 		Status: ResponseStatus{
