@@ -1,6 +1,25 @@
 
-<a name="0.1.0"></a>
-## 0.1.0
+<a name="v0.2.0"></a>
+## [v0.2.0](https://github.com/miauw-social/auth/compare/v0.1.0...v0.2.0)
+
+> 2023-07-27
+
+### Chore
+
+* **docker:** change dockerfile
+* **go:** add dependency
+
+### Feat
+
+* **env:** add env parser and struct to provide easier access to env vars
+
+### Perf
+
+* **config:** return pointer to config struct
+
+
+<a name="v0.1.0"></a>
+## v0.1.0
 
 > 2023-07-22
 
@@ -12,6 +31,7 @@
 
 ### Chore
 
+* **changelog:** add changelog
 * **docker:** add Dockerfile for go
 * **env:** add .env.example
 * **git:** update .gitignore
@@ -55,4 +75,8 @@
 * **deps:** add redis
 * **envvars:** add envvars to databases and security
 * **testing:** add db as parameter
+
+### Pull Requests
+
+* Merge pull request [#5](https://github.com/miauw-social/auth/issues/5) from miauw-social/development
 

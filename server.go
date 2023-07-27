@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"miauw.social/auth/config"
 	"os"
 	"time"
 
@@ -15,7 +16,8 @@ import (
 )
 
 func Serve(queueName string, handler func(*gorm.DB, []byte) (handlers.Response, error)) {
-	conn, err := amqp.Dial("amqp://guest:guest@192.168.1.28:5672")
+	cfg := config.GetConfig()
+	conn, err := amqp.Dial(cfg.RabbitMQ)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 	ch, err := conn.Channel()

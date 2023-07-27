@@ -1,9 +1,8 @@
 package database
 
 import (
-	"fmt"
 	"log"
-	"os"
+	"miauw.social/auth/config"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -12,12 +11,8 @@ import (
 )
 
 func Conn() *gorm.DB {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s  sslmode=disable TimeZone=Europe/Berlin",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASS"),
-		os.Getenv("DB_NAME"))
+
+	dsn := config.GetConfig().DBUrl
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Panic(" [!] Failed to connect to database.")
@@ -34,9 +29,10 @@ func Conn() *gorm.DB {
 }
 
 func RedisConn() *redis.Client {
+	cfg := config.GetConfig()
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
-		Password: os.Getenv("REDIS_PASS"),
+		Addr:     cfg.RedisHOST,
+		Password: cfg.RedisPass,
 		DB:       0,
 	})
 	return rdb
